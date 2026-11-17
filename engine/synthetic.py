@@ -12,6 +12,8 @@ import numpy as np
 
 from .problem import Problem, utp_slots
 
+DIAS = ["Lun", "Mar", "Mié", "Jue", "Vie", "Sáb"]
+
 
 @dataclass
 class SyntheticSpec:
@@ -123,6 +125,7 @@ def problem_from_tables(tables: dict[str, list[dict]]) -> Problem:
         event_teacher=ev_teacher, event_class=ev_class, class_students=cs,
         teacher_available=avail, teacher_preferred=pref,
         slot_ids=list(range(1, T + 1)),
+        slot_labels=[f"{DIAS[d]} {7 + i % 10:02d}:00" for i, d in enumerate(slots)],
         room_codes=[r["codigo"] for r in rooms], teacher_codes=teachers,
         class_codes=[g["codigo"] for g in groups],
     )

@@ -36,6 +36,7 @@ class Problem:
     teacher_preferred: np.ndarray   # (L, T) bool (sin preferencias = todo False)
     # Etiquetas para explicaciones y persistencia (ids de BD / códigos)
     slot_ids: list = field(default_factory=list)
+    slot_labels: list = field(default_factory=list)     # p. ej. "Lun 07:00"
     room_ids: list = field(default_factory=list)
     room_codes: list = field(default_factory=list)
     teacher_codes: list = field(default_factory=list)
