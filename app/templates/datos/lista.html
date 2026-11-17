@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% block title %}{{ cfg.titulo }}{% endblock %}
+{% block content %}
+<h1>Datos académicos</h1>
+<p class="sub">Información base del problema. Los estudiantes y las inscripciones se cargan desde <a href="{{ url_for('ingesta.formulario') }}">Importar</a>.</p>
+{% include "datos/_tabs.html" %}
+<form class="row card" method="post">
+  {% set item = none %}
+  {% include "datos/_campos.html" %}
+  <button>Agregar</button>
+</form>
+<div class="scroll">
+<table>
+  <tr>{% for campo, etiqueta, tipo in cfg.campos %}<th>{{ etiqueta }}</th>{% endfor %}
+      {% for c, e in extra %}<th class="num">{{ e }}</th>{% endfor %}<th></th></tr>
+  {% for f in filas %}
+  <tr>
+    {% for campo, etiqueta, tipo in cfg.campos %}<td class="{{ 'num' if tipo == 'int' }}">{{ f[campo] if f[campo] is not none }}</td>{% endfor %}
+    {% for c, e in extra %}<td class="num">{{ f[c] }}</td>{% endfor %}
+    <td style="white-space:nowrap">
+      {% if entidad == 'docentes' %}<a class="btn ghost" href="{{ url_for('datos.disponibilidad', item_id=f.id) }}">Disponibilidad</a>{% endif %}
+      <a class="btn ghost" href="{{ url_for('datos.editar', entidad=entidad, item_id=f.id) }}">Editar</a>
+      <form class="inline" method="post" action="{{ url_for('datos.eliminar', entidad=entidad, item_id=f.id) }}"
+            onsubmit="return confirm('¿Eliminar {{ f.codigo }}?')"><button class="danger">Eliminar</button></form>
+    </td>
+  </tr>
+  {% else %}
+  <tr><td colspan="9" class="muted">Sin registros.</td></tr>
+  {% endfor %}
+</table>
+</div>
+{% endblock %}

@@ -1,0 +1,16 @@
+{% for campo, etiqueta, tipo in cfg.campos %}
+<label>{{ etiqueta }}
+  {% if tipo.startswith('fk:') %}
+  <select name="{{ campo }}" required>
+    <option value="">—</option>
+    {% for o in opciones[campo] %}
+    <option value="{{ o.id }}" {{ 'selected' if item and item[campo]|string == o.id|string }}>{{ o.codigo }}</option>
+    {% endfor %}
+  </select>
+  {% elif tipo == 'int' %}
+  <input name="{{ campo }}" type="number" min="1" step="1" value="{{ item[campo] if item }}" required>
+  {% else %}
+  <input name="{{ campo }}" value="{{ item[campo] if item and item[campo] is not none }}" {{ 'required' if campo != 'nombre' }}>
+  {% endif %}
+</label>
+{% endfor %}

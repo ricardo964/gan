@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Disponibilidad de {{ docente.codigo }}</h1>
+<p class="sub">{{ docente.nombre or '' }}. Marque las franjas <b>bloqueadas</b> (restricción dura) y las <b>preferidas</b> (restricción blanda).
+Si un docente no tiene preferidas, la regla de preferencia no lo penaliza.</p>
+<form method="post" class="card">
+  <div class="slots">
+    <div></div>{% for d in dias %}<div><b>{{ d }}</b></div>{% endfor %}
+    {% for hora, fs in filas.items() %}
+      <div class="muted">{{ hora }}</div>
+      {% for f in fs %}{% set m = marcas.get(f.id) %}
+      <div>
+        <label title="Bloqueada"><input type="checkbox" name="bloqueada" value="{{ f.id }}" {{ 'checked' if m and not m.disponible }}>✕</label>
+        <label title="Preferida"><input type="checkbox" name="preferida" value="{{ f.id }}" {{ 'checked' if m and m.preferida }}>★</label>
+      </div>
+      {% endfor %}
+    {% endfor %}
+  </div>
+  <p><button>Guardar</button> <a class="btn ghost" href="{{ url_for('datos.lista', entidad='docentes') }}">Volver</a></p>
+</form>
+{% endblock %}

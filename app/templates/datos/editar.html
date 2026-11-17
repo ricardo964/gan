@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Editar {{ item.codigo }}</h1>
+<p class="sub">{{ cfg.titulo }}</p>
+<form class="row card" method="post">
+  {% include "datos/_campos.html" %}
+  <button>Guardar</button>
+  <a class="btn ghost" href="{{ url_for('datos.lista', entidad=entidad) }}">Cancelar</a>
+</form>
+{% endblock %}

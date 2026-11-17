@@ -9,7 +9,7 @@ from __future__ import annotations
 import json
 
 import numpy as np
-from sqlalchemy import text
+from sqlalchemy import text  # noqa: F401  (reexportado para controladores)
 
 from engine import Problem, Rule
 

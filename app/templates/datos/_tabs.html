@@ -1,0 +1,5 @@
+<nav style="margin-bottom:16px">
+  {% for key, e in entidades.items() %}
+  <a href="{{ url_for('datos.lista', entidad=key) }}" class="{{ 'active' if key == entidad }}">{{ e.titulo }}</a>
+  {% endfor %}
+</nav>
