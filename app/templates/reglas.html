@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{% block title %}Reglas{% endblock %}
+{% block content %}
+<h1>Reglas lógicas</h1>
+<p class="sub">F(P) = Σ wᵢ·Vᵢ(P). Las restricciones duras (HC) deben tener un peso mucho mayor que las blandas (SC).
+Cambiar reglas no requiere modificar el código del algoritmo.</p>
+<div class="scroll">
+<table>
+  <tr><th>Nombre</th><th>Tipo</th><th>Nivel</th><th>Condición</th><th class="num">Peso</th><th>Estado</th><th></th></tr>
+  {% for r in reglas %}
+  <tr class="{{ '' if r.activa else 'muted' }}">
+    <td>{{ r.nombre }}<div class="muted" style="font-size:12px">{{ r.descripcion or '' }}</div></td>
+    <td><span class="tag {{ r.tipo }}">{{ r.tipo }}</span></td>
+    <td>{{ r.nivel }}</td><td><code>{{ r.condicion }}</code></td>
+    <td class="num">{{ '%g'|format(r.peso) }}</td>
+    <td><form class="inline" method="post" action="{{ url_for('reglas.alternar', regla_id=r.id) }}">
+        <button class="ghost">{{ 'Activa' if r.activa else 'Inactiva' }}</button></form></td>
+    <td style="white-space:nowrap"><a class="btn ghost" href="{{ url_for('reglas.editar', regla_id=r.id) }}">Editar</a>
+      <form class="inline" method="post" action="{{ url_for('reglas.eliminar', regla_id=r.id) }}"
+            onsubmit="return confirm('¿Eliminar la regla {{ r.nombre }}?')"><button class="danger">Eliminar</button></form></td>
+  </tr>
+  {% endfor %}
+</table>
+</div>
+<h2>Nueva regla</h2>
+<form class="row card" method="post" action="{{ url_for('reglas.crear') }}">
+  {% include "_regla_campos.html" %}
+  <button>Crear</button>
+</form>
+<h2>Catálogo de condiciones</h2>
+<table>
+  <tr><th>Condición</th><th>Nivel natural</th><th>Parámetros</th><th>Descripción</th></tr>
+  {% for k, c in catalogo.items() %}
+  <tr><td><code>{{ k }}</code></td><td>{{ c.nivel }}</td>
+      <td>{% for p, v in c.params.items() %}<code>{{ p }}={{ '%g'|format(v) }}</code> {% else %}<span class="muted">—</span>{% endfor %}</td>
+      <td>{{ c.descripcion }}</td></tr>
+  {% endfor %}
+</table>
+<p class="muted">Sintaxis con parámetros: <code>eventos_clase_mismo_dia:max=3</code>.</p>
+{% endblock %}

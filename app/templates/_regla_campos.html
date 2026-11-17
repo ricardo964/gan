@@ -1,0 +1,8 @@
+<label>Nombre<input name="nombre" value="{{ item.nombre if item }}" required></label>
+<label>Tipo<select name="tipo">{% for t in ['HC', 'SC'] %}<option {{ 'selected' if item and item.tipo == t }}>{{ t }}</option>{% endfor %}</select></label>
+<label>Nivel<select name="nivel">{% for n in niveles %}<option {{ 'selected' if item and item.nivel == n }}>{{ n }}</option>{% endfor %}</select></label>
+<label>Condición<input name="condicion" list="condiciones" value="{{ item.condicion if item }}" size="34" required></label>
+<label>Peso<input name="peso" type="number" step="any" min="0" value="{{ item.peso if item }}" required></label>
+<label>Descripción<input name="descripcion" value="{{ item.descripcion if item and item.descripcion }}"></label>
+<label>Activa<input type="checkbox" name="activa" {{ 'checked' if not item or item.activa }}></label>
+<datalist id="condiciones">{% for k in catalogo %}<option value="{{ k }}">{% endfor %}</datalist>
