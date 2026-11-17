@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Programación de horarios</h1>
+<p class="sub">Algoritmo genético multi-profundidad (MDGA). Prototipo Alpha.</p>
+<div class="grid">
+  {% for key, label in [('salones','Salones'),('docentes','Docentes'),('materias','Materias'),('grupos','Grupos'),
+                        ('estudiantes','Estudiantes'),('eventos','Eventos'),('reglas','Reglas'),('corridas','Corridas')] %}
+  <div class="card"><div class="n">{{ c[key] }}</div><div class="l">{{ label }}</div></div>
+  {% endfor %}
+</div>
+<h2>Flujo</h2>
+<ol>
+  <li><a href="{{ url_for('ingesta.formulario') }}">Importar</a> los datos de la coordinación (XLSX/CSV) o registrarlos en <a href="{{ url_for('datos.lista', entidad='salones') }}">Datos</a>.</li>
+  <li>Revisar las <a href="{{ url_for('reglas.lista') }}">reglas</a> (tipo, peso y estado).</li>
+  <li>Configurar los parámetros y <a href="{{ url_for('optimizacion.formulario') }}">optimizar</a>.</li>
+  <li>Consultar los <a href="{{ url_for('resultados.corridas') }}">k mejores horarios</a>, su explicación y su evolución.</li>
+</ol>
+{% if ultima %}
+<h2>Última corrida</h2>
+<p><a href="{{ url_for('resultados.corrida', run_id=ultima.id) }}">Corrida #{{ ultima.id }}</a>
+   <span class="tag {{ ultima.estado }}">{{ ultima.estado }}</span>
+   {% if ultima.mejor_f is not none %} · F* = {{ '%.2f'|format(ultima.mejor_f) }} · H = {{ ultima.mejor_h|int }}{% endif %}</p>
+{% endif %}
+{% endblock %}
