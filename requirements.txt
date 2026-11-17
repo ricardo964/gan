@@ -1,0 +1,13 @@
+# Web (Vista + Controlador)
+Flask==3.1.3
+gunicorn==27.0.1
+python-dotenv==1.2.4
+# Modelo / MySQL
+Flask-SQLAlchemy==3.1.1
+SQLAlchemy==2.1.9
+PyMySQL==1.2.4
+cryptography==50.0.2
+# Motor MDGA
+numpy==2.5.5
+# Ingesta CSV/XLSX
+openpyxl==3.1.5
