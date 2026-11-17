@@ -16,13 +16,14 @@ def create_app(config: dict | None = None):
     )
     app.config["SQLALCHEMY_ENGINE_OPTIONS"] = {"pool_pre_ping": True}
     app.config["MAX_CONTENT_LENGTH"] = 20 * 1024 * 1024      # archivos de ingesta
-    app.config["JSON_SORT_KEYS"] = False
     app.config.update(config or {})
+    app.json.sort_keys = False
+    app.json.ensure_ascii = False
     db.init_app(app)
 
-    from .controllers import datos, inicio, ingesta, optimizacion, reglas, resultados
+    from .controllers import api, datos, inicio, ingesta, optimizacion, reglas, resultados
 
-    for module in (inicio, datos, ingesta, reglas, optimizacion, resultados):
+    for module in (inicio, datos, ingesta, reglas, optimizacion, resultados, api):
         app.register_blueprint(module.bp)
 
     @app.get("/health")
