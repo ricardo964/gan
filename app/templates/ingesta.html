@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% block title %}Importar{% endblock %}
+{% block content %}
+<h1>Importar datos</h1>
+<p class="sub">Archivos de la coordinación UTP: un <b>XLSX</b> con una hoja por entidad, o varios <b>CSV</b> nombrados como la entidad
+(<code>salones.csv</code>, <code>grupos.csv</code>…). La importación <b>reemplaza</b> todos los datos académicos y elimina las corridas anteriores.</p>
+<form class="card row" method="post" enctype="multipart/form-data">
+  <label>Archivos (.xlsx / .csv)<input type="file" name="archivos" accept=".xlsx,.csv" multiple required></label>
+  <button>Validar e importar</button>
+</form>
+{% if reporte %}
+<h2>No se importó: {{ reporte.errors|length }} error(es)</h2>
+{% for e in errores %}<div class="flash error">{{ e }}</div>{% endfor %}
+{% if omitidos %}<p class="muted">… y {{ omitidos }} más.</p>{% endif %}
+{% for w in reporte.warnings %}<div class="flash warn">{{ w }}</div>{% endfor %}
+{% endif %}
+<h2>Formato esperado</h2>
+<table>
+  <tr><th>Entidad (hoja o archivo)</th><th>Columnas</th><th></th></tr>
+  {% for name, spec in schema.items() %}
+  <tr><td><code>{{ name }}</code></td><td>{{ spec.cols|join(', ') }}</td>
+      <td>{{ 'obligatoria' if spec.required else 'opcional' }}</td></tr>
+  {% endfor %}
+</table>
+<p class="muted">Disponibilidad: <code>franja</code> 1..60 (lunes 7:00 a sábado 16:00); <code>disponible</code> y <code>preferida</code> valen 0 o 1.
+Un ejemplo válido es <code>datos/ejemplo_utp.xlsx</code> (<code>python scripts/generar_datos.py</code>).</p>
+{% endblock %}
