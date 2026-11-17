@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% block title %}Evolución{% endblock %}
+{% block content %}
+<h1>Evolución · corrida #{{ run.id }}</h1>
+<p class="sub">Curva de convergencia (mejor F por iteración, escala logarítmica) y diversidad poblacional D<sub>t</sub>.</p>
+<div class="chart"><canvas id="fit" height="110"></canvas></div>
+<h2>Diversidad D<sub>t</sub> y violaciones duras H</h2>
+<div class="chart"><canvas id="div" height="80"></canvas></div>
+<p><a class="btn ghost" href="{{ url_for('resultados.corrida', run_id=run.id) }}">Volver</a></p>
+{% endblock %}
+{% block scripts %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script>
+const H = {{ hist|tojson }};
+const css = getComputedStyle(document.documentElement);
+const fg = css.getPropertyValue('--text').trim(), mu = css.getPropertyValue('--muted').trim(),
+      ln = css.getPropertyValue('--line').trim(), bad = css.getPropertyValue('--bad').trim();
+Chart.defaults.color = mu; Chart.defaults.borderColor = ln;
+const x = H.map(h => h.iteracion);
+const pos = v => v > 0 ? v : null;
+new Chart(document.getElementById('fit'), {type: 'line', data: {labels: x, datasets: [
+  {label: 'Mejor F', data: H.map(h => pos(h.mejor_f)), borderColor: fg, pointRadius: 0, borderWidth: 2},
+  {label: 'F media', data: H.map(h => pos(h.media_f)), borderColor: mu, pointRadius: 0, borderWidth: 1, borderDash: [4, 3]}]},
+  options: {animation: false, interaction: {mode: 'index', intersect: false},
+            scales: {y: {type: 'logarithmic', title: {display: true, text: 'F(P)'}}, x: {title: {display: true, text: 'Iteración'}}}}});
+new Chart(document.getElementById('div'), {type: 'line', data: {labels: x, datasets: [
+  {label: 'Diversidad Dt', data: H.map(h => h.diversidad), borderColor: fg, pointRadius: 0, yAxisID: 'y'},
+  {label: 'H (mejor)', data: H.map(h => h.mejor_h), borderColor: bad, pointRadius: 0, yAxisID: 'y2', stepped: true}]},
+  options: {animation: false, interaction: {mode: 'index', intersect: false},
+            scales: {y: {min: 0, max: 1, title: {display: true, text: 'Dt'}},
+                     y2: {position: 'right', min: 0, grid: {drawOnChartArea: false}, title: {display: true, text: 'H'}}}}});
+</script>
+{% endblock %}

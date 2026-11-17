@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% block title %}Explicación{% endblock %}
+{% block content %}
+<h1>¿Por qué F = {{ '%.2f'|format(h.aptitud) }}?</h1>
+<p class="sub">Horario #{{ h.rango }} de la corrida #{{ run.id }}. Desglose de F(P) = Σ wᵢ·Vᵢ(P) por regla.
+Cobertura explicativa: {{ '%.0f%%'|format(100 * cobertura) }}.</p>
+<div class="grid">
+  <div class="card"><div class="n">{{ h.h|int }}</div><div class="l">Violaciones duras H(P)</div></div>
+  <div class="card"><div class="n">{{ '%.2f'|format(h.s) }}</div><div class="l">Penalización blanda S(P)</div></div>
+  {% for n in ['superficial', 'medio', 'profundo'] %}
+  <div class="card"><div class="n">{{ '%.2f'|format(niveles.get(n, 0)) }}</div><div class="l">Nivel {{ n }}</div></div>
+  {% endfor %}
+</div>
+<h2>Por regla</h2>
+<table>
+  <tr><th>Regla</th><th>Nivel</th><th class="num">Vᵢ</th><th class="num">wᵢ</th><th class="num">wᵢ·Vᵢ</th><th class="num">Eventos</th></tr>
+  {% for v in viol %}
+  <tr class="{{ '' if v.conteo else 'muted' }}"><td>{{ v.nombre }} <span class="tag {{ v.tipo }}">{{ v.tipo }}</span></td><td>{{ v.nivel }}</td>
+      <td class="num">{{ v.conteo|round(2) }}</td><td class="num">{{ '%g'|format(v.peso) }}</td>
+      <td class="num">{{ '%.2f'|format(v.penalizacion) }}</td><td class="num">{{ v.eventos|length }}</td></tr>
+  {% endfor %}
+</table>
+{% for v in viol if v.conteo and v.eventos %}
+<h2>{{ v.nombre }} <span class="tag {{ v.tipo }}">{{ v.tipo }}</span></h2>
+<p class="muted"><code>{{ v.condicion }}</code></p>
+<div class="scroll"><table>
+  <tr><th>Grupo</th><th>Materia</th><th>Docente</th><th>Franja</th><th>Salón</th><th class="num">Estudiantes / cap.</th></tr>
+  {% for e in v.eventos[:50] %}{% set a = eventos.get(e) %}{% if a %}
+  <tr><td>{{ a.grupo }}</td><td>{{ a.materia }}</td><td>{{ a.docente }}</td><td>{{ a.franja }}</td><td>{{ a.salon }}</td>
+      <td class="num">{{ a.estudiantes }} / {{ a.capacidad }}</td></tr>
+  {% endif %}{% endfor %}
+</table></div>
+{% if v.eventos|length > 50 %}<p class="muted">… y {{ v.eventos|length - 50 }} eventos más.</p>{% endif %}
+{% endfor %}
+<p><a class="btn ghost" href="{{ url_for('resultados.horario', run_id=run.id, horario_id=h.id) }}">Ver horario</a></p>
+{% endblock %}

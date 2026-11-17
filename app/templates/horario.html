@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% block title %}Horario{% endblock %}
+{% block content %}
+<h1>Horario #{{ h.rango }} · corrida #{{ run.id }}</h1>
+<p class="sub">F = {{ '%.2f'|format(h.aptitud) }} · H = {{ h.h|int }} · S = {{ '%.2f'|format(h.s) }} · {{ total }} eventos.
+  Los eventos con borde rojo violan alguna restricción dura.</p>
+<form class="row" method="get">
+  <label>Ver por<select name="por" onchange="this.form.valor.value=''; this.form.submit()">
+    {% for k, v in POR.items() %}<option value="{{ k }}" {{ 'selected' if k == por }}>{{ v }}</option>{% endfor %}</select></label>
+  <label>{{ POR[por] }}<select name="valor" onchange="this.form.submit()">
+    {% for o in opciones %}<option {{ 'selected' if o == valor }}>{{ o }}</option>{% endfor %}</select></label>
+  <a class="btn ghost" href="{{ url_for('resultados.explicacion', run_id=run.id, horario_id=h.id) }}">Explicación</a>
+  <a class="btn ghost" href="{{ url_for('resultados.exportar', run_id=run.id, horario_id=h.id) }}">Exportar CSV</a>
+  <a class="btn ghost" href="{{ url_for('resultados.corrida', run_id=run.id) }}">Volver</a>
+</form>
+<div class="scroll">
+<table class="timetable">
+  <tr><th></th>{% for d in dias %}<th>{{ d }}</th>{% endfor %}</tr>
+  {% for hora in horas %}
+  <tr><td class="hour">{{ hora }}</td>
+    {% for d in dias %}
+    <td>{% for a in celdas.get((loop.index, hora), []) %}
+      <div class="ev {{ 'conf' if a.evento_id in conflictos }}" title="{{ a.materia_nombre }} · {{ a.estudiantes }} est. / cap. {{ a.capacidad }}">
+        <b>{{ a.grupo }}</b> {{ a.materia }}<br><span class="muted">{{ a.docente }} · {{ a.salon }}</span></div>
+    {% endfor %}</td>
+    {% endfor %}
+  </tr>
+  {% endfor %}
+</table>
+</div>
+{% endblock %}

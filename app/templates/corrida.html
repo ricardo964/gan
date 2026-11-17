@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+{% block title %}Corrida #{{ run.id }}{% endblock %}
+{% block head %}{% if run.estado in ('pendiente', 'ejecutando', 'cancelando') %}<meta http-equiv="refresh" content="2">{% endif %}{% endblock %}
+{% block content %}
+<h1>Corrida #{{ run.id }} <span class="tag {{ run.estado }}">{{ run.estado }}</span></h1>
+<p class="sub">T<sub>max</sub>={{ run.t_max }} · k={{ run.k }} · N={{ run.n }} · τ={{ run.tau }} · p<sub>c</sub>={{ run.pc }} · p<sub>m</sub>={{ run.pm }}
+  {% if run.semilla is not none %}· semilla={{ run.semilla }}{% endif %} · {{ run.n_eventos or '?' }} eventos</p>
+
+{% if run.estado in ('pendiente', 'ejecutando', 'cancelando') %}
+  <div class="card">
+    <p>Iteración {{ (ultimo.iteracion if ultimo else 0) }} de {{ run.t_max }}
+       {% if ultimo %}· mejor F = {{ '%.2f'|format(ultimo.mejor_f) }} · H = {{ ultimo.mejor_h|int }}{% endif %}</p>
+    <form method="post" action="{{ url_for('resultados.cancelar', run_id=run.id) }}"><button class="danger">Cancelar</button></form>
+  </div>
+{% elif run.estado == 'error' %}
+  <div class="flash error">La corrida falló.</div><pre>{{ run.mensaje }}</pre>
+{% else %}
+<div class="grid">
+  <div class="card"><div class="n">{{ '%.2f'|format(run.mejor_f) }}</div><div class="l">F* final</div></div>
+  <div class="card"><div class="n">{{ run.mejor_h|int }}</div><div class="l">Violaciones duras H</div></div>
+  <div class="card"><div class="n">{{ run.g_factible if run.g_factible is not none else '—' }}</div><div class="l">G<sub>f</sub> (gen. hasta H=0)</div></div>
+  <div class="card"><div class="n">{{ '%.1f%%'|format(100 * (run.f_inicial - run.mejor_f) / run.f_inicial) if run.f_inicial else '—' }}</div><div class="l">Mejora ΔF</div></div>
+  <div class="card"><div class="n">{{ run.generaciones }}</div><div class="l">Generaciones ({{ run.detenida_por }})</div></div>
+  <div class="card"><div class="n">{{ '%.1f'|format(run.tiempo_s) }} s</div><div class="l">{{ run.evaluaciones }} evaluaciones</div></div>
+</div>
+<p><a class="btn ghost" href="{{ url_for('resultados.evolucion', run_id=run.id) }}">Ver evolución</a></p>
+
+<h2>Mejores {{ finales|length }} horarios</h2>
+<table>
+  <tr><th>Rango</th><th class="num">F(P)</th><th class="num">H(P)</th><th class="num">S(P)</th><th>Factible</th><th></th></tr>
+  {% for h in finales %}
+  <tr><td>{{ h.rango }}</td><td class="num">{{ '%.2f'|format(h.aptitud) }}</td><td class="num">{{ h.h|int }}</td>
+      <td class="num">{{ '%.2f'|format(h.s) }}</td>
+      <td>{% if h.h == 0 %}<span class="tag ok">sí</span>{% else %}<span class="tag bad">no</span>{% endif %}</td>
+      <td style="white-space:nowrap">
+        <a class="btn ghost" href="{{ url_for('resultados.horario', run_id=run.id, horario_id=h.id) }}">Horario</a>
+        <a class="btn ghost" href="{{ url_for('resultados.explicacion', run_id=run.id, horario_id=h.id) }}">Explicación</a>
+        <a class="btn ghost" href="{{ url_for('resultados.exportar', run_id=run.id, horario_id=h.id) }}">CSV</a></td></tr>
+  {% endfor %}
+</table>
+
+{% if comparacion %}
+<h2>Comparación por regla (Vᵢ)</h2>
+<table>
+  <tr><th>Regla</th>{% for h in finales %}<th class="num">#{{ h.rango }}</th>{% endfor %}</tr>
+  {% for (nombre, tipo), vals in comparacion.items() %}
+  <tr><td>{{ nombre }} <span class="tag {{ tipo }}">{{ tipo }}</span></td>
+      {% for h in finales %}<td class="num">{{ vals.get(h.rango, 0)|round(2) }}</td>{% endfor %}</tr>
+  {% endfor %}
+</table>
+{% endif %}
+{% endif %}
+<form method="post" action="{{ url_for('resultados.eliminar', run_id=run.id) }}" style="margin-top:24px"
+      onsubmit="return confirm('¿Eliminar la corrida #{{ run.id }} y todos sus resultados?')">
+  <button class="danger">Eliminar corrida</button></form>
+{% endblock %}

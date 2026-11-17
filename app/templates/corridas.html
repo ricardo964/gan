@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% block title %}Resultados{% endblock %}
+{% block content %}
+<h1>Corridas</h1>
+<p class="sub">Cada corrida conserva sus parámetros, su historial y los k mejores horarios (trazabilidad).</p>
+<div class="scroll">
+<table>
+  <tr><th>#</th><th>Fecha</th><th>Estado</th><th class="num">T<sub>max</sub></th><th class="num">k</th><th class="num">N</th>
+      <th class="num">τ</th><th class="num">p<sub>c</sub></th><th class="num">p<sub>m</sub></th>
+      <th class="num">F*</th><th class="num">H</th><th class="num">G<sub>f</sub></th><th class="num">Tiempo</th></tr>
+  {% for r in corridas %}
+  <tr>
+    <td><a href="{{ url_for('resultados.corrida', run_id=r.id) }}">#{{ r.id }}</a></td>
+    <td>{{ r.creada_en.strftime('%Y-%m-%d %H:%M') }}</td>
+    <td><span class="tag {{ r.estado }}">{{ r.estado }}</span></td>
+    <td class="num">{{ r.t_max }}</td><td class="num">{{ r.k }}</td><td class="num">{{ r.n }}</td>
+    <td class="num">{{ r.tau }}</td><td class="num">{{ r.pc }}</td><td class="num">{{ r.pm }}</td>
+    <td class="num">{{ '%.2f'|format(r.mejor_f) if r.mejor_f is not none else '—' }}</td>
+    <td class="num">{{ r.mejor_h|int if r.mejor_h is not none else '—' }}</td>
+    <td class="num">{{ r.g_factible if r.g_factible is not none else '—' }}</td>
+    <td class="num">{{ '%.1f s'|format(r.tiempo_s) if r.tiempo_s else '—' }}</td>
+  </tr>
+  {% else %}
+  <tr><td colspan="13" class="muted">Aún no hay corridas. <a href="{{ url_for('optimizacion.formulario') }}">Generar horarios</a>.</td></tr>
+  {% endfor %}
+</table>
+</div>
+{% endblock %}
