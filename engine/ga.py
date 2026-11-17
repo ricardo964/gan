@@ -1,10 +1,11 @@
-"""Pipeline evolutivo MDGA (Hito 2, sección 7.2, Figura 8):
+"""MDGA evolutionary pipeline (Milestone 2, section 7.2, Figure 8).
 
-    P0 → Eval → Select_torneo → Crossover_uniforme → Mutation_reasignación
-       → Elitism_k → P_{t+1}
+Starting from P0, each generation applies evaluation, tournament
+selection, uniform crossover, reassignment mutation and k-elitism to
+produce P_{t+1}.
 
-Reemplazo generacional con elitismo: P_{t+1} = Best_k(P_t) ∪ C_t, donde
-|C_t| = N − k. Termina al alcanzar T_max o el criterio de calidad.
+Generational replacement with elitism: P_{t+1} = Best_k(P_t) union C_t,
+where |C_t| = N - k. Stops when T_max or the quality criterion is reached.
 """
 from __future__ import annotations
 
@@ -21,17 +22,17 @@ from .problem import Problem
 
 @dataclass
 class GAParams:
-    """Parámetros de ejecución (Tabla 12)."""
+    """Run parameters (Table 12)."""
 
-    t_max: int = 200          # iteraciones máximas
-    k: int = 5                # mejores individuos conservados (elitismo y persistencia)
-    n: int = 60               # tamaño de población N
-    tau: int = 3              # tamaño de torneo τ
-    pc: float = 0.9           # probabilidad de cruce
-    pm: float = 0.01          # probabilidad de mutación por evento
+    t_max: int = 200          # maximum iterations
+    k: int = 5                # best individuals kept (elitism and persistence)
+    n: int = 60               # population size N
+    tau: int = 3              # tournament size tau
+    pc: float = 0.9           # crossover probability
+    pm: float = 0.01          # mutation probability per event
     seed: int | None = None
-    target_f: float | None = None   # criterio de calidad: parar si F* <= target_f
-    diversity_every: int = 1        # calcular D_t cada cuántas iteraciones (0 = nunca)
+    target_f: float | None = None   # quality criterion: stop if F* <= target_f
+    diversity_every: int = 1        # compute D_t every this many iterations (0 = never)
 
     def validate(self) -> None:
         errors = []
@@ -59,7 +60,7 @@ class IterationInfo:
     best_h: float
     mean_f: float
     diversity: float | None
-    elite_idx: np.ndarray          # índices de los k mejores en `pop`
+    elite_idx: np.ndarray          # indices of the k best in `pop`
     pop: np.ndarray
     F: np.ndarray
     H: np.ndarray
@@ -67,10 +68,10 @@ class IterationInfo:
 
 @dataclass
 class GAResult:
-    best: np.ndarray               # (k, E, 2) mejores k, ordenados
+    best: np.ndarray               # (k, E, 2) k best, sorted
     best_F: np.ndarray
     best_H: np.ndarray
-    history: list = field(default_factory=list)   # dicts por iteración
+    history: list = field(default_factory=list)   # dicts per iteration
     generations: int = 0
     generations_to_feasible: int | None = None    # G_f
     elapsed_s: float = 0.0
@@ -83,7 +84,7 @@ class GAResult:
 
     @property
     def relative_improvement(self) -> float:
-        """ΔF = (F0* − FT*) / F0*."""
+        """Delta F = (F0* - FT*) / F0*."""
         f0 = self.initial_best_f
         return (f0 - float(self.best_F[0])) / f0 if f0 else 0.0
 
@@ -92,11 +93,11 @@ def run_ga(problem: Problem, evaluator: Evaluator, params: GAParams,
            on_iteration: Callable[[IterationInfo], None] | None = None,
            should_stop: Callable[[], bool] | None = None,
            initial_population: np.ndarray | None = None) -> GAResult:
-    """Ejecuta el MDGA y devuelve los k mejores horarios.
+    """Run the MDGA and return the k best schedules.
 
-    `on_iteration` recibe la información de cada generación (incluida la
-    t = 0) y permite persistir los mejores k sin acoplar el motor a la BD.
-    `should_stop` permite cancelar la corrida desde fuera.
+    `on_iteration` receives the information of each generation (including
+    t = 0) and allows persisting the k best without coupling the engine
+    to the database. `should_stop` allows cancelling the run externally.
     """
     params.validate()
     rng = np.random.default_rng(params.seed)
@@ -125,7 +126,7 @@ def run_ga(problem: Problem, evaluator: Evaluator, params: GAParams,
             on_iteration(IterationInfo(t, float(F[b]), float(H[b]), float(F.mean()), div,
                                        elite, pop, F, H))
 
-        # Criterios de terminación
+        # Termination criteria
         if params.target_f is not None and F[b] <= params.target_f:
             stopped_by = "calidad"
             break
@@ -135,7 +136,7 @@ def run_ga(problem: Problem, evaluator: Evaluator, params: GAParams,
             stopped_by = "cancelada"
             break
 
-        # Selección → cruce → mutación → elitismo
+        # Selection, crossover, mutation and elitism
         n_children = N - k
         parents = tournament(F, params.tau, 2 * n_children, rng)
         p1, p2 = pop[parents[:n_children]], pop[parents[n_children:]]

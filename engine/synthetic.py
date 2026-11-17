@@ -1,8 +1,8 @@
-"""Generador de instancias sintéticas tipo UTP.
+"""Generator of synthetic UTP-like instances.
 
-Sirve para probar el motor sin BD y para los experimentos. Las mismas
-estructuras se exportan a XLSX (scripts/generar_datos.py) para probar
-la ingesta.
+Used to test the engine without a database and for the experiments. The
+same structures are exported to XLSX (scripts/generar_datos.py) to test
+ingestion.
 """
 from __future__ import annotations
 
@@ -26,13 +26,13 @@ class SyntheticSpec:
     hours_max: int = 4
     group_size: tuple[int, int] = (20, 40)
     courses_per_student: int = 5
-    unavailable_frac: float = 0.15     # fracción de franjas no disponibles por docente
-    pref_frac: float = 0.3             # fracción de docentes con preferencias
+    unavailable_frac: float = 0.15     # fraction of unavailable time slots per teacher
+    pref_frac: float = 0.3             # fraction of teachers with preferences
     seed: int = 0
 
 
 def generate_tables(spec: SyntheticSpec) -> dict[str, list[dict]]:
-    """Tablas con las mismas columnas que espera la ingesta CSV/XLSX."""
+    """Tables with the same columns expected by CSV/XLSX ingestion."""
     rng = np.random.default_rng(spec.seed)
     slots = utp_slots()
     T = len(slots)
@@ -51,7 +51,7 @@ def generate_tables(spec: SyntheticSpec) -> dict[str, list[dict]]:
     for d in docentes:
         blocked = rng.random(T) < spec.unavailable_frac
         has_pref = rng.random() < spec.pref_frac
-        # preferencia: mañanas (primeras 5 franjas del día) o tardes
+        # preference: mornings (first 5 slots of the day) or afternoons
         morning = rng.random() < 0.5
         for t in range(T):
             pos = t % 10
@@ -66,8 +66,8 @@ def generate_tables(spec: SyntheticSpec) -> dict[str, list[dict]]:
         grupos.append({"codigo": f"G{g + 1:03d}", "materia": m["codigo"],
                        "docente": docentes[int(rng.integers(spec.n_teachers))]["codigo"]})
 
-    # Inscripciones: cada estudiante en `courses_per_student` grupos de materias
-    # distintas, respetando un tamaño máximo por grupo.
+    # Enrollments: each student in `courses_per_student` groups of different
+    # subjects, respecting a maximum size per group.
     cap = {g["codigo"]: int(rng.integers(lo, hi + 1)) for g in grupos}
     count = {g["codigo"]: 0 for g in grupos}
     inscripciones = []
@@ -90,7 +90,7 @@ def generate_tables(spec: SyntheticSpec) -> dict[str, list[dict]]:
 
 
 def problem_from_tables(tables: dict[str, list[dict]]) -> Problem:
-    """Construye un Problem directamente desde las tablas (sin BD)."""
+    """Build a Problem directly from the tables (no database)."""
     slots = utp_slots()
     T = len(slots)
     rooms = tables["salones"]

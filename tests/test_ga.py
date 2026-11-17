@@ -11,7 +11,7 @@ from engine.synthetic import SyntheticSpec, generate_problem
 def test_torneo_elige_el_menor_F():
     rng = np.random.default_rng(0)
     F = np.array([5.0, 1.0, 3.0, 0.5])
-    # con τ = N el ganador siempre es el mejor... si aparece entre los aspirantes
+    # with tau = N the winner is always the best, if it is among the candidates
     winners = tournament(F, tau=50, n_select=20, rng=rng)
     assert (winners == 3).all()
 
@@ -22,7 +22,7 @@ def test_cruce_conserva_paquetes_completos():
     p2 = np.stack([np.arange(100) + 500, np.arange(100) + 2000], axis=1)[None].repeat(10, 0)
     child = uniform_event_crossover(p1, p2, pc=1.0, rng=rng)
     from_p1 = child[:, :, 0] < 500
-    # si t vino de p1, r también (nunca se mezclan t de un padre y r del otro)
+    # if t came from p1, so did r (t from one parent is never mixed with r from the other)
     assert (from_p1 == (child[:, :, 1] < 2000)).all()
     assert from_p1.any() and (~from_p1).any()
 
@@ -40,8 +40,8 @@ def test_mutacion_respeta_dominios_y_tasa():
     out = reassignment_mutation(pop, pm=0.1, n_slots=60, n_rooms=7, rng=rng)
     assert out[:, :, 0].max() < 60 and out[:, :, 1].max() < 7
     changed = (out != pop).any(axis=2).mean()
-    assert 0.05 < changed < 0.12          # ≈ pm (algunas reasignaciones caen igual)
-    assert (pop == 0).all()               # no modifica la entrada
+    assert 0.05 < changed < 0.12          # about pm (some reassignments land on the same value)
+    assert (pop == 0).all()               # does not modify the input
     assert (reassignment_mutation(pop, 0.0, 60, 7, rng) == pop).all()
 
 
@@ -81,7 +81,7 @@ def test_ga_alcanza_factibilidad_y_elitismo_monotono():
     res = run_ga(problem, ev, GAParams(t_max=150, k=3, n=40, tau=3, pc=0.9, pm=0.02, seed=1),
                  on_iteration=lambda info: seen.append(info.t))
     best = [h["best_f"] for h in res.history]
-    assert all(b2 <= b1 for b1, b2 in zip(best, best[1:]))     # elitismo
+    assert all(b2 <= b1 for b1, b2 in zip(best, best[1:]))     # elitism
     assert seen == list(range(res.generations + 1))
     assert res.best_H[0] == 0 and res.generations_to_feasible is not None
     assert res.relative_improvement > 0.9

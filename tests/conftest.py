@@ -11,10 +11,10 @@ from engine import Problem, Rule  # noqa: E402
 
 @pytest.fixture
 def tiny():
-    """4 franjas (2 días), 2 salas, 2 docentes, 2 clases, 3 estudiantes.
+    """4 time slots (2 days), 2 rooms, 2 teachers, 2 classes, 3 students.
 
     c0 = {s0, s1}, c1 = {s1, s2}; e0=(l0,c0), e1=(l0,c1), e2=(l1,c1).
-    El docente l0 no está disponible en la franja 3.
+    Teacher l0 is not available in time slot 3.
     """
     avail = np.ones((2, 4), dtype=bool)
     avail[0, 3] = False

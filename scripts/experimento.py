@@ -1,12 +1,12 @@
-"""Corridas independientes del MDGA para evaluar el prototipo (Hito 2, sección 11).
+"""Independent MDGA runs to evaluate the prototype (Milestone 2, section 11).
 
-Ejecuta Nc corridas con semillas distintas sobre una instancia sintética
-(o un XLSX de ingesta) SIN usar la BD, y reporta media, desviación
-estándar y mejor valor de las métricas de las Tablas 15 y 16:
-tasa de factibilidad R_f, G_f, ΔF, F*, H*, S*, D_t final, tiempo, y además
-cuántos de los k mejores son horarios distintos.
+Executes Nc runs with different seeds on a synthetic instance (or an
+ingestion XLSX) WITHOUT using the database, and reports the mean,
+standard deviation and best value of the metrics in Tables 15 and 16:
+feasibility rate R_f, G_f, Delta F, F*, H*, S*, final D_t, time, and also
+how many of the k best are distinct schedules.
 
-Uso:
+Usage:
     python scripts/experimento.py --corridas 10 --tmax 300
     python scripts/experimento.py --xlsx datos/ejemplo_utp.xlsx --pm 0.02
     python scripts/experimento.py --grupos 60 --estudiantes 800 --salones 15 --docentes 25
@@ -26,7 +26,7 @@ from engine import Evaluator, Rule  # noqa: E402
 from engine.ga import GAParams, run_ga  # noqa: E402
 from engine.synthetic import SyntheticSpec, generate_tables, problem_from_tables  # noqa: E402
 
-# Mismas reglas base que db/init.sql
+# Same base rules as db/init.sql
 REGLAS = [
     Rule("disponibilidad_docente", "HC", "docente_no_disponible", 1000),
     Rule("capacidad_sala", "HC", "estudiantes_excede_capacidad", 1000),

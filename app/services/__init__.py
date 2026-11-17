@@ -1,1 +1,1 @@
-"""Servicios del Controlador (orquestación de corridas)."""
+"""Controller services (run orchestration)."""

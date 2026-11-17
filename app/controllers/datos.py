@@ -1,9 +1,9 @@
-"""Registro y consulta de datos académicos (Vistas gráficas, Fig. 6).
+"""Registration and lookup of academic data (graphical views, Fig. 6).
 
-CRUD sencillo de salones, docentes, materias y grupos con validación
-(Tabla 12), y la cuadrícula de disponibilidad/preferencia de cada
-docente sobre las 60 franjas. Los estudiantes e inscripciones se cargan
-por ingesta (XLSX/CSV).
+Simple CRUD for rooms, teachers, subjects and groups with validation
+(Table 12), plus the availability/preference grid of each teacher over
+the 60 time slots. Students and enrollments are loaded through
+ingestion (XLSX/CSV).
 """
 from flask import Blueprint, abort, flash, redirect, render_template, request, url_for
 from sqlalchemy.exc import IntegrityError
@@ -12,7 +12,7 @@ from ..models import repo
 
 bp = Blueprint("datos", __name__, url_prefix="/datos")
 
-# campo, etiqueta, tipo (text | int | fk:<tabla>)
+# field, label, type (text | int | fk:<table>)
 ENTIDADES = {
     "salones": {"titulo": "Salones", "campos": [("codigo", "Código", "text"),
                                                 ("capacidad", "Capacidad", "int")]},

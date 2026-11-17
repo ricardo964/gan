@@ -1,8 +1,8 @@
-"""Núcleo de cómputo MDGA (independiente de Flask y de la BD).
+"""MDGA compute core (independent of Flask and the database).
 
-Recibe un `Problem` (arreglos NumPy) y una lista de `Rule`, y produce
-horarios optimizados. La aplicación web y la persistencia se conectan a
-él mediante callbacks, lo que mantiene la separación MVC del Hito 2.
+Takes a `Problem` (NumPy arrays) and a list of `Rule` objects and
+produces optimized schedules. The web application and persistence plug
+into it through callbacks, which keeps the MVC separation of Milestone 2.
 """
 from .fitness import Evaluation, Evaluator, Rule
 from .problem import Problem, utp_slots

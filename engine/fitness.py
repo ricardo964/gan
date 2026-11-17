@@ -1,11 +1,11 @@
-"""Función de aptitud multi-profundidad (Hito 2, sección 3.3).
+"""Multi-depth fitness function (Milestone 2, section 3.3).
 
-    F(P) = Σ_i w_i · V_i(P)          (minimizar)
-    H(P) = Σ_{i ∈ HC} V_i(P)          (factible si H = 0)
-    S(P) = Σ_{j ∈ SC} w_j · V_j(P)
+    F(P) = sum_i w_i * V_i(P)          (minimize)
+    H(P) = sum_{i in HC} V_i(P)        (feasible if H = 0)
+    S(P) = sum_{j in SC} w_j * V_j(P)
 
-Las reglas se agrupan en tres niveles (superficial, medio, profundo); la
-penalización total es la suma de las contribuciones de los tres niveles.
+Rules are grouped into three levels (surface, middle, deep); the total
+penalty is the sum of the contributions of the three levels.
 """
 from __future__ import annotations
 
@@ -21,13 +21,13 @@ LEVELS = ("superficial", "medio", "profundo")
 
 @dataclass
 class Rule:
-    """Regla lógica tal como se almacena en la BD (Tabla 6)."""
+    """Logical rule as stored in the database (Table 6)."""
 
     nombre: str
     tipo: str            # 'HC' | 'SC'
     condicion: str
     peso: float
-    nivel: str = ""      # si se omite se toma el nivel natural de la condición
+    nivel: str = ""      # if omitted, the natural level of the condition is used
     activa: bool = True
     id: int | None = None
 
@@ -48,7 +48,7 @@ class Evaluation:
     F: float
     H: float
     S: float
-    violations: np.ndarray                    # V_i por regla activa
+    violations: np.ndarray                    # V_i per active rule
     by_level: dict = field(default_factory=dict)
 
     @property
@@ -57,7 +57,7 @@ class Evaluation:
 
 
 class Evaluator:
-    """Evalúa horarios con las reglas activas. Es el motor de inferencia."""
+    """Evaluate schedules with the active rules. This is the inference engine."""
 
     def __init__(self, problem: Problem, rules: list[Rule]):
         self.problem = problem
@@ -90,7 +90,7 @@ class Evaluator:
         )
 
     def evaluate_population(self, pop: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
-        """Devuelve (F, H) para cada individuo de la población."""
+        """Return (F, H) for each individual in the population."""
         F = np.empty(len(pop))
         H = np.empty(len(pop))
         for i, ind in enumerate(pop):
@@ -101,7 +101,7 @@ class Evaluator:
         return F, H
 
     def detail(self, ind: np.ndarray) -> list[dict]:
-        """Desglose por regla con los eventos involucrados (para explicación)."""
+        """Per-rule breakdown with the events involved (for the explanation)."""
         t, r = ind[:, T_COL], ind[:, R_COL]
         out = []
         for fn, rule, w in zip(self._fns, self.rules, self.weights):

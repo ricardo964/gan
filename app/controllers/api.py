@@ -1,8 +1,8 @@
-"""Adaptadores de API REST/JSON (Fig. 6 y Fig. 10, Tabla 14 del Hito 2).
+"""REST/JSON API adapters (Fig. 6 and Fig. 10, Table 14 of Milestone 2).
 
-Permiten que sistemas legados y externos consulten datos, lancen
-corridas y obtengan horarios y explicaciones sin usar la interfaz web.
-Los errores siempre se devuelven como JSON: {"error": "...", ...}.
+They let legacy and external systems query data, launch runs and
+retrieve schedules and explanations without using the web interface.
+Errors are always returned as JSON: {"error": "...", ...}.
 """
 from flask import Blueprint, current_app, jsonify, request
 from sqlalchemy.exc import IntegrityError
@@ -40,7 +40,7 @@ def http_error(exc):
 
 
 def _json(data):
-    """Convierte tipos de MySQL (time, datetime) a texto serializable."""
+    """Convert MySQL types (time, datetime) to serializable text."""
     if isinstance(data, (list, tuple)):
         return [_json(x) for x in data]
     if isinstance(data, dict):
@@ -57,7 +57,7 @@ def _run_or_404(run_id):
     return run, None
 
 
-# ------------------------------------------------------------- datos base
+# Base data
 @bp.get("/estado")
 def estado():
     return jsonify(conteos=repo.counts())
@@ -71,7 +71,7 @@ def listar(entidad):
     return jsonify(_json(data))
 
 
-# ----------------------------------------------------------------- reglas
+# Rules
 @bp.get("/reglas")
 def reglas():
     return jsonify(_json(repo.list_rules()))
@@ -129,7 +129,7 @@ def editar_regla(regla_id):
     return jsonify(_json(repo.one("SELECT * FROM reglas WHERE id = :id", id=regla_id)))
 
 
-# --------------------------------------------------------------- corridas
+# Runs
 @bp.get("/corridas")
 def corridas():
     return jsonify(_json([{k: r[k] for k in RUN_FIELDS} for r in repo.list_runs()]))
@@ -174,7 +174,7 @@ def historial(run_id):
     return err or jsonify(_json(repo.history(run_id)))
 
 
-# --------------------------------------------------------------- horarios
+# Schedules
 def _schedule_or_404(horario_id):
     h = repo.schedule(horario_id)
     if not h:

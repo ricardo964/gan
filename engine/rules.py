@@ -1,18 +1,18 @@
-"""Catálogo de condiciones lógicas (motor de inferencia basado en reglas).
+"""Catalog of logical conditions (rule-based inference engine).
 
-Cada regla almacenada en la BD (Tabla 6 del Hito 2) tiene un campo
-`condicion` con la forma::
+Each rule stored in the database (Table 6 of Milestone 2) has a
+`condicion` field of the form::
 
-    nombre_condicion            o bien
-    nombre_condicion:param=valor,param2=valor
+    condition_name              or
+    condition_name:param=value,param2=value
 
-`nombre_condicion` selecciona una función de este catálogo; los
-parámetros permiten ajustar la regla desde la interfaz sin modificar el
-código del algoritmo (configurabilidad, métrica 11.3).
+`condition_name` selects a function from this catalog; the parameters
+let the rule be tuned from the interface without changing the algorithm
+code (configurability, metric 11.3).
 
-Toda condición recibe el problema y los vectores t y r de un horario y
-devuelve V_i(P) (número de violaciones) y, si `detail=True`, la lista de
-eventos involucrados (para el subsistema explicativo).
+Every condition receives the problem and the t and r vectors of a
+schedule and returns V_i(P) (number of violations) and, if `detail=True`,
+the list of events involved (for the explanation subsystem).
 """
 from __future__ import annotations
 
@@ -28,7 +28,7 @@ CONDITIONS: dict[str, dict] = {}
 
 
 def condition(name: str, nivel: str, descripcion: str, params: dict | None = None):
-    """Registra una condición con su nivel de profundidad natural."""
+    """Register a condition with its natural depth level."""
 
     def deco(fn: ConditionFn) -> ConditionFn:
         CONDITIONS[name] = {"fn": fn, "nivel": nivel, "descripcion": descripcion,
@@ -39,7 +39,7 @@ def condition(name: str, nivel: str, descripcion: str, params: dict | None = Non
 
 
 def parse_condition(text: str) -> tuple[str, dict]:
-    """'nombre:a=1,b=2' -> ('nombre', {'a': 1.0, 'b': 2.0})."""
+    """Parse 'name:a=1,b=2' into ('name', {'a': 1.0, 'b': 2.0})."""
     name, _, raw = text.strip().partition(":")
     params: dict = {}
     for part in filter(None, (p.strip() for p in raw.split(","))):
@@ -58,9 +58,9 @@ def parse_condition(text: str) -> tuple[str, dict]:
     return name, {**CONDITIONS[name]["params"], **params}
 
 
-# ---------------------------------------------------------------- utilidades
+# Utilities
 def _excess_by_key(keys: np.ndarray, size: int, detail: bool):
-    """Σ max(0, n_k - 1) sobre claves repetidas; eventos con clave repetida."""
+    """Sum of max(0, n_k - 1) over repeated keys, and the events with a repeated key."""
     counts = np.bincount(keys, minlength=size)
     v = float(np.maximum(counts - 1, 0).sum())
     events = np.flatnonzero(counts[keys] > 1).tolist() if detail and v else ([] if detail else None)
@@ -72,7 +72,7 @@ def _mask_result(mask: np.ndarray, detail: bool):
     return v, (np.flatnonzero(mask).tolist() if detail else None)
 
 
-# ------------------------------------------------------- nivel superficial
+# Surface level
 @condition("docente_no_disponible", "superficial",
            "El evento está en una franja en la que su docente no está disponible.")
 def docente_no_disponible(p: Problem, t, r, params, detail):
@@ -93,7 +93,7 @@ def fuera_de_franja_preferida(p: Problem, t, r, params, detail):
     return _mask_result(has & ~p.teacher_preferred[p.event_teacher, t], detail)
 
 
-# -------------------------------------------------------------- nivel medio
+# Middle level
 @condition("docente_dos_eventos_misma_franja", "medio",
            "Un docente tiene más de un evento en la misma franja.")
 def docente_dos_eventos(p: Problem, t, r, params, detail):
@@ -143,12 +143,12 @@ def eventos_clase_mismo_dia(p: Problem, t, r, params, detail):
     return v, np.flatnonzero(counts[keys] > limit).tolist()
 
 
-# ------------------------------------------------------------ nivel profundo
+# Deep level
 @condition("estudiante_dos_eventos_misma_franja", "profundo",
            "Un estudiante tiene eventos de clases distintas en la misma franja.")
 def estudiante_dos_eventos(p: Problem, t, r, params, detail):
     occ = np.zeros((p.n_classes, p.n_slots), dtype=np.int64)
-    occ[p.event_class, t] = 1                      # clase ocupada en t (0/1)
+    occ[p.event_class, t] = 1                      # class busy at t (0/1)
     per_student = p.class_students.T.astype(np.int64) @ occ   # (St, T)
     conflict = per_student > 1
     v = float(np.maximum(per_student - 1, 0).sum())

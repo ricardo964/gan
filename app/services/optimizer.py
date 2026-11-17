@@ -1,12 +1,13 @@
-"""Orquestación de una corrida (Figura 7 del Hito 2, pasos 3 a 13).
+"""Orchestration of a run (Figure 7 of Milestone 2, steps 3 to 13).
 
-Controlador → MySQL (datos y reglas activas) → Motor MDGA (bucle
-evolutivo, guardando los mejores k) → Subsistema explicativo → MySQL.
+The controller loads data and active rules from MySQL, runs the MDGA
+engine (evolutionary loop that saves the k best), passes the result to
+the explanation subsystem and stores everything back in MySQL.
 
-Las corridas se ejecutan en un hilo para no bloquear la petición HTTP.
-El estado vive en la BD, así que la interfaz y la API lo consultan sin
-importar qué proceso atiende la petición. La cancelación también se
-comunica por la BD (estado 'cancelando').
+Runs execute in a thread so the HTTP request is not blocked. The state
+lives in the database, so the interface and the API can read it no
+matter which process serves the request. Cancellation is also signaled
+through the database (state 'cancelando').
 """
 from __future__ import annotations
 
@@ -21,14 +22,14 @@ from explain import explain
 
 from ..models import repo
 
-FLUSH_EVERY = 20          # iteraciones por escritura en bloque
-CHECK_CANCEL_EVERY = 10   # iteraciones entre consultas de cancelación
+FLUSH_EVERY = 20          # iterations per bulk write
+CHECK_CANCEL_EVERY = 10   # iterations between cancellation checks
 
 _threads: dict[int, threading.Thread] = {}
 
 
 def parse_params(form: dict) -> GAParams:
-    """Convierte y valida los parámetros recibidos por web o API (Tabla 12)."""
+    """Convert and validate the parameters received from the web or the API (Table 12)."""
     try:
         seed = form.get("seed") if form.get("seed") not in (None, "") else form.get("semilla")
         p = GAParams(
@@ -63,7 +64,7 @@ def cancel_run(run_id: int) -> bool:
 
 
 def mark_interrupted() -> None:
-    """Al arrancar, las corridas 'ejecutando' de un proceso anterior quedaron huérfanas."""
+    """On startup, runs still 'ejecutando' from a previous process are orphaned."""
     repo.q("""UPDATE corridas SET estado = 'error',
               mensaje = 'interrumpida: el servidor se reinició durante la ejecución'
               WHERE estado IN ('pendiente', 'ejecutando', 'cancelando')""")
@@ -120,7 +121,7 @@ def _execute(app: Flask, run_id: int, params: GAParams) -> None:
                 detenida_por=result.stopped_by,
                 tiempo_s=result.elapsed_s,
             )
-        except Exception as exc:  # noqa: BLE001 - se registra en la corrida
+        except Exception as exc:  # noqa: BLE001 - recorded in the run
             repo.db.session.rollback()
             repo.update_run(run_id, estado="error",
                             mensaje=f"{exc}\n\n{traceback.format_exc()}"[:60000])

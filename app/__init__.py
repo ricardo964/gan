@@ -1,4 +1,4 @@
-"""Aplicación web MDGA (Vista + Controlador del patrón MVC, Hito 2 sección 4)."""
+"""MDGA web application (View + Controller of the MVC pattern, Milestone 2 section 4)."""
 import os
 
 from flask import Flask, jsonify
@@ -15,7 +15,7 @@ def create_app(config: dict | None = None):
         "DATABASE_URL", "mysql+pymysql://mdga:mdga_pass@localhost:3306/mdga?charset=utf8mb4"
     )
     app.config["SQLALCHEMY_ENGINE_OPTIONS"] = {"pool_pre_ping": True}
-    app.config["MAX_CONTENT_LENGTH"] = 20 * 1024 * 1024      # archivos de ingesta
+    app.config["MAX_CONTENT_LENGTH"] = 20 * 1024 * 1024      # ingestion files
     app.config.update(config or {})
     app.json.sort_keys = False
     app.json.ensure_ascii = False
@@ -40,7 +40,7 @@ def create_app(config: dict | None = None):
                 from .services.optimizer import mark_interrupted
 
                 mark_interrupted()
-            except Exception:  # noqa: BLE001 - la BD puede no estar lista aún
+            except Exception:  # noqa: BLE001 - the database may not be ready yet
                 db.session.rollback()
 
     return app

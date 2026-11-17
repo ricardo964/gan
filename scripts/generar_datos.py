@@ -1,6 +1,6 @@
-"""Genera un XLSX de ejemplo con el formato de ingesta.
+"""Generate a sample XLSX with the ingestion format.
 
-Uso:
+Usage:
     python scripts/generar_datos.py [salida.xlsx] [--grupos 30] [--estudiantes 400] [--semilla 0]
 """
 import argparse

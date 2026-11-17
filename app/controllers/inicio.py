@@ -1,4 +1,4 @@
-"""Panel de inicio: estado de la base de hechos y última corrida."""
+"""Home panel: state of the fact base and the latest run."""
 from flask import Blueprint, render_template
 
 from ..models import repo

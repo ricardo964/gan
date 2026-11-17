@@ -1,7 +1,7 @@
-"""Gestión de reglas lógicas (Hito 2, sección 4.1, Tabla 6).
+"""Logical rule management (Milestone 2, section 4.1, Table 6).
 
-Las reglas se validan con el mismo motor que las evalúa, de modo que
-una condición inválida se rechaza al guardarla y no durante la corrida.
+Rules are validated with the same engine that evaluates them, so an
+invalid condition is rejected when it is saved rather than during a run.
 """
 from flask import Blueprint, abort, flash, redirect, render_template, request, url_for
 from sqlalchemy.exc import IntegrityError

@@ -1,13 +1,13 @@
-"""Modelo formal del problema (Hito 2, sección 3.1 y 3.2).
+"""Formal problem model (Milestone 2, sections 3.1 and 3.2).
 
-- Paquete  q = (t, r): franja horaria y sala.               -> genes variables
-- Evento   e = (l, c, S): docente, clase y estudiantes.     -> campos fijos
-- Horario  P = {(q, e)}: un paquete por evento.
+- Package   q = (t, r): time slot and room (variable genes).
+- Event     e = (l, c, S): teacher, class and students (fixed fields).
+- Schedule  P = {(q, e)}: one package per event.
 
-El cromosoma de un individuo es un arreglo entero de forma (E, 2) donde
-la columna 0 es t (0..T-1) y la columna 1 es r (0..R-1). Una población
-es un arreglo (N, E, 2). Los campos fijos l, c y S viven en `Problem` y
-nunca son modificados por los operadores genéticos.
+The chromosome of an individual is an integer array of shape (E, 2)
+where column 0 is t (0..T-1) and column 1 is r (0..R-1). A population is
+an (N, E, 2) array. The fixed fields l, c and S live in `Problem` and are
+never modified by the genetic operators.
 """
 from __future__ import annotations
 
@@ -20,23 +20,23 @@ T_COL, R_COL = 0, 1
 
 @dataclass
 class Problem:
-    """Instancia del problema con índices densos (0-based) listos para NumPy."""
+    """Problem instance with dense (0-based) indices ready for NumPy."""
 
-    # Dominio temporal
-    n_slots: int                    # T (60 en la UTP)
-    slot_day: np.ndarray            # (T,) día 0..D-1 de cada franja
-    # Salas
-    room_capacity: np.ndarray       # (R,) capacidad
-    # Eventos (campos fijos l, c, S)
-    event_teacher: np.ndarray       # (E,) índice de docente l
-    event_class: np.ndarray         # (E,) índice de clase/grupo c
-    class_students: np.ndarray      # (C, St) bool: S de cada clase
-    # Docentes
+    # Time domain
+    n_slots: int                    # T (60 at UTP)
+    slot_day: np.ndarray            # (T,) day 0..D-1 of each time slot
+    # Rooms
+    room_capacity: np.ndarray       # (R,) capacity
+    # Events (fixed fields l, c, S)
+    event_teacher: np.ndarray       # (E,) teacher index l
+    event_class: np.ndarray         # (E,) class/group index c
+    class_students: np.ndarray      # (C, St) bool: S of each class
+    # Teachers
     teacher_available: np.ndarray   # (L, T) bool
-    teacher_preferred: np.ndarray   # (L, T) bool (sin preferencias = todo False)
-    # Etiquetas para explicaciones y persistencia (ids de BD / códigos)
+    teacher_preferred: np.ndarray   # (L, T) bool (no preferences = all False)
+    # Labels for explanations and persistence (database ids / codes)
     slot_ids: list = field(default_factory=list)
-    slot_labels: list = field(default_factory=list)     # p. ej. "Lun 07:00"
+    slot_labels: list = field(default_factory=list)     # e.g. "Lun 07:00"
     room_ids: list = field(default_factory=list)
     room_codes: list = field(default_factory=list)
     teacher_codes: list = field(default_factory=list)
@@ -52,12 +52,12 @@ class Problem:
         self.teacher_available = np.asarray(self.teacher_available, dtype=bool)
         self.teacher_preferred = np.asarray(self.teacher_preferred, dtype=bool)
         self.validate()
-        # Derivados
+        # Derived
         self.class_size = self.class_students.sum(axis=1).astype(np.int64)
-        self.event_size = self.class_size[self.event_class]          # |S| por evento
+        self.event_size = self.class_size[self.event_class]          # |S| per event
         self.teacher_has_pref = self.teacher_preferred.any(axis=1)
 
-    # ------------------------------------------------------------------ dims
+    # Dimensions
     @property
     def n_events(self) -> int:
         return int(self.event_teacher.shape[0])
@@ -82,7 +82,7 @@ class Problem:
     def n_days(self) -> int:
         return int(self.slot_day.max()) + 1 if self.slot_day.size else 0
 
-    # ------------------------------------------------------------ validación
+    # Validation
     def validate(self) -> None:
         T = self.n_slots
         if self.slot_day.shape != (T,):
@@ -102,9 +102,9 @@ class Problem:
         if self.event_class.max() >= self.class_students.shape[0]:
             raise ValueError("evento con clase fuera de rango")
 
-    # ----------------------------------------------------------- cromosoma
+    # Chromosome
     def random_individual(self, rng: np.random.Generator) -> np.ndarray:
-        """Individuo aleatorio: t ~ U{0..T-1}, r ~ U{0..R-1} por evento."""
+        """Random individual: t ~ U{0..T-1}, r ~ U{0..R-1} per event."""
         ind = np.empty((self.n_events, 2), dtype=np.int64)
         ind[:, T_COL] = rng.integers(0, self.n_slots, self.n_events)
         ind[:, R_COL] = rng.integers(0, self.n_rooms, self.n_events)
@@ -125,5 +125,5 @@ class Problem:
 
 
 def utp_slots(days: int = 6, per_day: int = 10) -> np.ndarray:
-    """Discretización UTP por defecto: 60 franjas, 10 por día de lunes a sábado."""
+    """Default UTP discretization: 60 time slots, 10 per day from Monday to Saturday."""
     return np.repeat(np.arange(days), per_day)

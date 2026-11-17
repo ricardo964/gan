@@ -1,13 +1,13 @@
-"""Lectura y validación de los archivos de la coordinación UTP.
+"""Reading and validation of the UTP coordination files.
 
-Formatos aceptados (Tabla 14 del Hito 2):
-- XLSX con una hoja por entidad (los nombres de hoja son las claves de SCHEMA).
-- CSV, un archivo por entidad, cuyo nombre (sin extensión) es la entidad,
-  p. ej. `salones.csv`.
+Accepted formats (Table 14 of Milestone 2):
+- XLSX with one sheet per entity (sheet names are the SCHEMA keys).
+- CSV, one file per entity, whose name (without extension) is the
+  entity, e.g. `salones.csv`.
 
-La ingesta es un reemplazo completo del conjunto de datos académicos, por
-eso son obligatorias las entidades marcadas `required`; `disponibilidad`
-es opcional (sin ella, todo docente está disponible en todas las franjas).
+Ingestion fully replaces the academic data set, which is why the
+entities marked `required` are mandatory; `disponibilidad` is optional
+(without it, every teacher is available in every time slot).
 """
 from __future__ import annotations
 
@@ -44,7 +44,7 @@ class IngestReport:
         return {name: len(rows) for name, rows in self.tables.items()}
 
 
-# ------------------------------------------------------------------ lectura
+# Reading
 def _norm(value) -> str:
     if value is None:
         return ""
@@ -80,7 +80,7 @@ def read_csv(data: bytes, entity: str) -> dict[str, list[dict]]:
 
 
 def read_files(files: list[tuple[str, bytes]]) -> tuple[dict, list[str]]:
-    """[(nombre_archivo, bytes)] -> (tablas, errores de lectura)."""
+    """Turn [(file_name, bytes)] into (tables, read errors)."""
     tables, errors = {}, []
     for filename, data in files:
         ext = Path(filename).suffix.lower()
@@ -95,12 +95,12 @@ def read_files(files: list[tuple[str, bytes]]) -> tuple[dict, list[str]]:
                 tables.update(read_csv(data, stem))
             else:
                 errors.append(f"{filename}: formato no soportado (use CSV o XLSX)")
-        except Exception as exc:  # noqa: BLE001 - se reporta al usuario
+        except Exception as exc:  # noqa: BLE001 - reported to the user
             errors.append(f"{filename}: no se pudo leer ({exc})")
     return tables, errors
 
 
-# --------------------------------------------------------------- validación
+# Validation
 def _cast(entity, row_no, col, raw, typ, errors):
     if raw == "":
         if (entity, col) in OPTIONAL_COLS:
@@ -121,7 +121,7 @@ def _cast(entity, row_no, col, raw, typ, errors):
 
 def validate(raw: dict[str, list[dict]], n_slots: int = N_SLOTS,
              max_rooms_hint: int | None = None) -> IngestReport:
-    """Valida tipos, unicidad, referencias y coherencia (Tabla 12)."""
+    """Validate types, uniqueness, references and consistency (Table 12)."""
     rep = IngestReport()
     for entity, spec in SCHEMA.items():
         if entity not in raw:
@@ -135,7 +135,7 @@ def validate(raw: dict[str, list[dict]], n_slots: int = N_SLOTS,
                 rep.errors.append(f"{entity}: faltan columnas {missing}")
                 continue
         clean = []
-        for i, row in enumerate(rows, start=2):           # fila 1 = encabezado
+        for i, row in enumerate(rows, start=2):           # row 1 = header
             item, bad = {}, False
             for col, typ in spec["cols"].items():
                 val = _cast(entity, i, col, row.get(col, ""), typ, rep.errors)
@@ -193,7 +193,7 @@ def validate(raw: dict[str, list[dict]], n_slots: int = N_SLOTS,
     if rep.errors:
         return rep
 
-    # Coherencia global (advertencias: el algoritmo puede ejecutarse igual)
+    # Global consistency (warnings: the algorithm can still run)
     hours = {m["codigo"]: m["horas_semanales"] for m in t["materias"]}
     n_events = sum(hours[g["materia"]] for g in t["grupos"])
     capacity = n_slots * len(salones)

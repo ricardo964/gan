@@ -28,7 +28,7 @@ services:
     env_file: .env
     environment:
       DATABASE_URL: mysql+pymysql://${MYSQL_USER}:${MYSQL_PASSWORD}@db:3306/${MYSQL_DATABASE}?charset=utf8mb4
-    # Desarrollo: recarga automática con el código montado
+    # Development: automatic reload with the mounted code
     command: flask --app app run --host 0.0.0.0 --port 5000 --debug
     ports:
       - "${WEB_PORT:-5000}:5000"

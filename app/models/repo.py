@@ -1,15 +1,15 @@
-"""Modelo (MVC): acceso a MySQL, la base de hechos y de conocimiento.
+"""Model (MVC): access to MySQL, the fact base and the knowledge base.
 
-Traduce entre las tablas del esquema (db/init.sql) y las estructuras
-del motor (`engine.Problem`, `engine.Rule`). Es la conexión funcional
-entre el motor de inferencia y la base de hechos que pide el Hito 3.
+Translates between the schema tables (db/init.sql) and the engine
+structures (`engine.Problem`, `engine.Rule`). It is the functional link
+between the inference engine and the fact base required by Milestone 3.
 """
 from __future__ import annotations
 
 import json
 
 import numpy as np
-from sqlalchemy import text  # noqa: F401  (reexportado para controladores)
+from sqlalchemy import text  # noqa: F401  (re-exported for controllers)
 
 from engine import Problem, Rule
 
@@ -35,7 +35,7 @@ def slot_label(row: dict) -> str:
     return f"{DIAS[row['dia'] - 1]} {str(row['hora_inicio'])[:-3].zfill(5)}"
 
 
-# ------------------------------------------------------------ datos base
+# Base data
 def counts() -> dict:
     tables = ["salones", "docentes", "materias", "grupos", "estudiantes", "eventos",
               "reglas", "corridas"]
@@ -50,10 +50,10 @@ def franjas() -> list[dict]:
 
 
 def sync_eventos() -> int:
-    """Asegura un evento por hora semanal de cada grupo (e = (l, c, S)).
+    """Ensure one event per weekly hour of each group (e = (l, c, S)).
 
-    Inserta los que faltan y elimina los sobrantes (p. ej. si bajaron las
-    horas de una materia). Devuelve el total de eventos.
+    Inserts the missing ones and deletes the extra ones (e.g. when the
+    hours of a subject were reduced). Returns the total number of events.
     """
     q("""
         DELETE e FROM eventos e
@@ -74,10 +74,10 @@ def sync_eventos() -> int:
 
 
 def replace_academic_data(t: dict[str, list[dict]]) -> dict:
-    """Reemplaza todos los datos académicos por los de la ingesta.
+    """Replace all academic data with the ingested data.
 
-    Las corridas anteriores se eliminan porque sus horarios referencian
-    eventos que dejan de existir. Se ejecuta en una sola transacción.
+    Previous runs are deleted because their schedules reference events
+    that no longer exist. Runs in a single transaction.
     """
     try:
         for table in ("corridas", "eventos", "grupo_estudiante", "grupos", "estudiantes",
@@ -120,7 +120,7 @@ def _ids(table: str) -> dict:
     return {r["codigo"]: r["id"] for r in rows(f"SELECT id, codigo FROM {table}")}
 
 
-# ----------------------------------------------------------------- reglas
+# Rules
 def list_rules() -> list[dict]:
     return rows("SELECT * FROM reglas ORDER BY tipo, nivel, nombre")
 
@@ -132,9 +132,9 @@ def load_rules(only_active: bool = True) -> list[Rule]:
             for r in rows(sql)]
 
 
-# ------------------------------------------------------- problema (hechos)
+# Problem (facts)
 def load_problem() -> Problem:
-    """Construye el Problem del motor a partir de la base de hechos."""
+    """Build the engine Problem from the fact base."""
     fr = franjas()
     slot_index = {r["id"]: i for i, r in enumerate(fr)}
     salones = rows("SELECT id, codigo, capacidad FROM salones ORDER BY id")
@@ -183,7 +183,7 @@ def load_problem() -> Problem:
     )
 
 
-# --------------------------------------------------------------- corridas
+# Runs
 def create_run(p: dict) -> int:
     res = q("""INSERT INTO corridas (t_max, k, n, tau, pc, pm, semilla)
                VALUES (:t_max, :k, :n, :tau, :pc, :pm, :seed)""", **p)
@@ -198,7 +198,7 @@ def update_run(run_id: int, **fields) -> None:
 
 
 def run_status(run_id: int) -> str | None:
-    db.session.rollback()          # ver cambios de otros procesos/hilos
+    db.session.rollback()          # see changes from other processes/threads
     return q("SELECT estado FROM corridas WHERE id = :id", id=run_id).scalar()
 
 
@@ -216,7 +216,7 @@ def delete_run(run_id: int) -> None:
 
 
 def save_iterations(run_id: int, history: list[dict], elites: list[dict]) -> None:
-    """Persiste en bloque el historial y los mejores k de varias iteraciones."""
+    """Bulk-persist the history and the k best of several iterations."""
     _insert("""INSERT INTO historial (corrida_id, iteracion, mejor_f, mejor_h, media_f, diversidad)
                VALUES (:c, :t, :f, :h, :m, :d)""",
             [{"c": run_id, "t": h["t"], "f": h["best_f"], "h": h["best_h"],
@@ -229,7 +229,7 @@ def save_iterations(run_id: int, history: list[dict], elites: list[dict]) -> Non
 
 def save_final(run_id: int, problem: Problem, final_iter: int, best: np.ndarray,
                explanations: list[dict]) -> None:
-    """Guarda las asignaciones (t, r) y el desglose de violaciones de los k mejores."""
+    """Save the (t, r) assignments and the violation breakdown of the k best."""
     ids = {r["rango"]: r["id"] for r in rows(
         "SELECT id, rango FROM horarios WHERE corrida_id = :c AND iteracion = :t",
         c=run_id, t=final_iter)}
@@ -253,7 +253,7 @@ def history(run_id: int) -> list[dict]:
 
 
 def final_schedules(run_id: int) -> list[dict]:
-    """Los k mejores horarios de la última iteración (los que tienen asignaciones)."""
+    """The k best schedules of the last iteration (those with assignments)."""
     return rows("""SELECT h.* FROM horarios h
                    WHERE h.corrida_id = :c
                      AND h.iteracion = (SELECT MAX(iteracion) FROM horarios WHERE corrida_id = :c)

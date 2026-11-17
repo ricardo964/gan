@@ -1,1 +1,1 @@
-"""Controladores (blueprints) de la aplicación web y de la API."""
+"""Controllers (blueprints) for the web application and the API."""

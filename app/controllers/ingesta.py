@@ -1,4 +1,4 @@
-"""Importación de los archivos de la coordinación UTP (pipelines de ingesta)."""
+"""Import of the UTP coordination files (ingestion pipelines)."""
 from flask import Blueprint, flash, redirect, render_template, request, url_for
 
 from ingest import SCHEMA, read_files, validate
@@ -27,7 +27,7 @@ def importar():
     if rep.ok:
         try:
             resumen = repo.replace_academic_data(rep.tables)
-        except Exception as exc:  # noqa: BLE001 - error de BD mostrado al usuario
+        except Exception as exc:  # noqa: BLE001 - database error shown to the user
             rep.errors.append(f"error al guardar en la base de datos: {exc}")
         else:
             flash("Datos importados: " + ", ".join(f"{k} {v}" for k, v in resumen.items()), "ok")

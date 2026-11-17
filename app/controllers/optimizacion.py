@@ -1,4 +1,4 @@
-"""Configuración de parámetros e inicio de la optimización (Fig. 7, pasos 1 a 5)."""
+"""Parameter configuration and optimization start (Fig. 7, steps 1 to 5)."""
 from flask import (Blueprint, current_app, flash, redirect, render_template, request,
                    url_for)
 

@@ -1,10 +1,10 @@
--- Esquema MDGA (Hito 2: Tablas 6, 11, 12 y 13)
+-- MDGA schema (Milestone 2: Tables 6, 11, 12 and 13)
 SET NAMES utf8mb4;
 
--- Franjas: 60, de lunes 7:00 a sábado 16:00
+-- Time slots: 60, from Monday 7:00 to Saturday 16:00
 CREATE TABLE franjas (
   id INT PRIMARY KEY,                 -- t = 1..60
-  dia TINYINT NOT NULL,               -- 1=lunes .. 6=sábado
+  dia TINYINT NOT NULL,               -- 1=Monday .. 6=Saturday
   hora_inicio TIME NOT NULL,
   hora_fin TIME NOT NULL
 );
@@ -21,7 +21,7 @@ CREATE TABLE docentes (
   nombre VARCHAR(120)
 );
 
--- Disponibilidad / preferencia docente por franja
+-- Teacher availability / preference per time slot
 CREATE TABLE disponibilidad_docente (
   docente_id INT NOT NULL,
   franja_id INT NOT NULL,
@@ -44,7 +44,7 @@ CREATE TABLE estudiantes (
   codigo VARCHAR(30) NOT NULL UNIQUE
 );
 
--- Grupo = clase c (sección de una materia) con su docente
+-- Group = class c (section of a subject) with its teacher
 CREATE TABLE grupos (
   id INT AUTO_INCREMENT PRIMARY KEY,  -- c
   codigo VARCHAR(30) NOT NULL UNIQUE,
@@ -54,7 +54,7 @@ CREATE TABLE grupos (
   FOREIGN KEY (docente_id) REFERENCES docentes(id)
 );
 
--- Conjunto S de estudiantes del grupo
+-- Set S of students in the group
 CREATE TABLE grupo_estudiante (
   grupo_id INT NOT NULL,
   estudiante_id INT NOT NULL,
@@ -63,7 +63,7 @@ CREATE TABLE grupo_estudiante (
   FOREIGN KEY (estudiante_id) REFERENCES estudiantes(id) ON DELETE CASCADE
 );
 
--- Eventos e = (l, c, S): uno por hora semanal de la materia del grupo
+-- Events e = (l, c, S): one per weekly hour of the group's subject
 CREATE TABLE eventos (
   id INT AUTO_INCREMENT PRIMARY KEY,
   grupo_id INT NOT NULL,
@@ -72,19 +72,19 @@ CREATE TABLE eventos (
   FOREIGN KEY (grupo_id) REFERENCES grupos(id) ON DELETE CASCADE
 );
 
--- Reglas lógicas (Tabla 6)
+-- Logical rules (Table 6)
 CREATE TABLE reglas (
   id INT AUTO_INCREMENT PRIMARY KEY,
   nombre VARCHAR(80) NOT NULL UNIQUE,
   tipo ENUM('HC','SC') NOT NULL,
   nivel ENUM('superficial','medio','profundo') NOT NULL,
-  condicion VARCHAR(255) NOT NULL,     -- identificador/expresión evaluada por el motor
+  condicion VARCHAR(255) NOT NULL,     -- identifier/expression evaluated by the engine
   peso DOUBLE NOT NULL CHECK (peso >= 0),
   activa BOOLEAN NOT NULL DEFAULT TRUE,
   descripcion VARCHAR(255)
 );
 
--- Corrida = ejecución con sus parámetros (Tabla 12)
+-- Run = execution with its parameters (Table 12)
 CREATE TABLE corridas (
   id INT AUTO_INCREMENT PRIMARY KEY,
   creada_en TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -97,21 +97,21 @@ CREATE TABLE corridas (
   pc DOUBLE NOT NULL CHECK (pc BETWEEN 0 AND 1),
   pm DOUBLE NOT NULL CHECK (pm BETWEEN 0 AND 1),
   semilla INT,
-  -- Resultados resumidos (se completan al terminar)
+  -- Summary results (filled in when finished)
   n_eventos INT,
   generaciones INT,
-  g_factible INT,                     -- G_f: generaciones hasta H = 0
+  g_factible INT,                     -- G_f: generations until H = 0
   mejor_f DOUBLE,
   mejor_h DOUBLE,
-  f_inicial DOUBLE,                   -- F0* para ΔF
+  f_inicial DOUBLE,                   -- F0* for Delta F
   evaluaciones INT,
   detenida_por VARCHAR(20),           -- t_max | calidad | cancelada
   tiempo_s DOUBLE,
-  mensaje TEXT,                       -- detalle de error
+  mensaje TEXT,                       -- error detail
   CHECK (k < n)
 );
 
--- Historial de evolución: mejor aptitud y diversidad por iteración
+-- Evolution history: best fitness and diversity per iteration
 CREATE TABLE historial (
   corrida_id INT NOT NULL,
   iteracion INT NOT NULL,
@@ -123,7 +123,7 @@ CREATE TABLE historial (
   FOREIGN KEY (corrida_id) REFERENCES corridas(id) ON DELETE CASCADE
 );
 
--- Mejores k horarios por iteración (trazabilidad)
+-- k best schedules per iteration (traceability)
 CREATE TABLE horarios (
   id INT AUTO_INCREMENT PRIMARY KEY,
   corrida_id INT NOT NULL,
@@ -136,7 +136,7 @@ CREATE TABLE horarios (
   FOREIGN KEY (corrida_id) REFERENCES corridas(id) ON DELETE CASCADE
 );
 
--- Genes: paquete (t, r) asignado a cada evento
+-- Genes: (t, r) package assigned to each event
 CREATE TABLE asignaciones (
   horario_id INT NOT NULL,
   evento_id INT NOT NULL,
@@ -144,26 +144,26 @@ CREATE TABLE asignaciones (
   salon_id INT NOT NULL,
   PRIMARY KEY (horario_id, evento_id),
   FOREIGN KEY (horario_id) REFERENCES horarios(id) ON DELETE CASCADE,
-  -- Si cambian los grupos/materias, los eventos se regeneran y las
-  -- asignaciones históricas de esos eventos se eliminan con ellos.
+  -- If groups/subjects change, events are regenerated and the
+  -- historical assignments of those events are deleted with them.
   FOREIGN KEY (evento_id) REFERENCES eventos(id) ON DELETE CASCADE,
   FOREIGN KEY (franja_id) REFERENCES franjas(id),
   FOREIGN KEY (salon_id) REFERENCES salones(id)
 );
 
--- Desglose de violaciones V_i(P) por regla (subsistema explicativo)
+-- Breakdown of violations V_i(P) by rule (explanation subsystem)
 CREATE TABLE violaciones (
   horario_id INT NOT NULL,
   regla_id INT NOT NULL,
   conteo INT NOT NULL,                -- V_i(P)
   penalizacion DOUBLE NOT NULL,       -- w_i * V_i(P)
-  eventos_json JSON,                  -- eventos involucrados
+  eventos_json JSON,                  -- events involved
   PRIMARY KEY (horario_id, regla_id),
   FOREIGN KEY (horario_id) REFERENCES horarios(id) ON DELETE CASCADE,
   FOREIGN KEY (regla_id) REFERENCES reglas(id) ON DELETE CASCADE
 );
 
--- Datos semilla: 60 franjas (10 por día, lunes a sábado, 7:00 a 17:00; la última empieza a las 16:00)
+-- Seed data: 60 time slots (10 per day, Monday to Saturday, 7:00 to 17:00; the last one starts at 16:00)
 INSERT INTO franjas (id, dia, hora_inicio, hora_fin)
 WITH RECURSIVE seq(n) AS (SELECT 0 UNION ALL SELECT n + 1 FROM seq WHERE n < 59)
 SELECT n + 1, FLOOR(n / 10) + 1,
@@ -171,7 +171,7 @@ SELECT n + 1, FLOOR(n / 10) + 1,
        SEC_TO_TIME((8 + MOD(n, 10)) * 3600)
 FROM seq;
 
--- Reglas base (Tabla 3 / Tabla 4)
+-- Base rules (Table 3 / Table 4)
 INSERT INTO reglas (nombre, tipo, nivel, condicion, peso, descripcion) VALUES
  ('disponibilidad_docente','HC','superficial','docente_no_disponible',1000,'Evento en franja no disponible del docente'),
  ('capacidad_sala','HC','superficial','estudiantes_excede_capacidad',1000,'|S| mayor que la capacidad de la sala'),

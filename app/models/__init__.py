@@ -1,1 +1,1 @@
-"""Capa Modelo: acceso a la base de hechos (MySQL)."""
+"""Model layer: access to the fact base (MySQL)."""

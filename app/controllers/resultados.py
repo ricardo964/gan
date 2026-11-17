@@ -1,10 +1,10 @@
-"""Consulta de resultados (Dashboards de visualización, Fig. 6; Tabla 13).
+"""Results lookup (visualization dashboards, Fig. 6; Table 13).
 
-- Corridas y sus k mejores horarios con F, H y S.
-- Horario por grupo, docente o salón (cuadrícula día × franja).
-- Explicación: desglose de violaciones por regla y eventos involucrados.
-- Evolución: mejor aptitud, aptitud media y diversidad por iteración.
-- Exportación del horario a CSV.
+- Runs and their k best schedules with F, H and S.
+- Schedule by group, teacher or room (day by time slot grid).
+- Explanation: violation breakdown by rule and the events involved.
+- Evolution: best fitness, mean fitness and diversity per iteration.
+- Schedule export to CSV.
 """
 import csv
 import io

@@ -1,7 +1,7 @@
-"""Operadores genéticos del pipeline evolutivo (Hito 2, secciones 7.3 a 7.6).
+"""Genetic operators of the evolutionary pipeline (Milestone 2, sections 7.3 to 7.6).
 
-Todos operan sobre lotes de individuos (arreglos (M, E, 2)) para evitar
-bucles de Python por evento.
+All of them operate on batches of individuals ((M, E, 2) arrays) to
+avoid per-event Python loops.
 """
 from __future__ import annotations
 
@@ -11,10 +11,10 @@ from .problem import R_COL, T_COL
 
 
 def tournament(F: np.ndarray, tau: int, n_select: int, rng: np.random.Generator) -> np.ndarray:
-    """Selección por torneo (7.3): X* = argmin_{X∈T} F(X), |T| = τ.
+    """Tournament selection (7.3): X* = argmin_{X in T} F(X), |T| = tau.
 
-    Devuelve los índices de los `n_select` ganadores. No transforma la
-    aptitud en probabilidades; la presión selectiva se controla con τ.
+    Returns the indices of the `n_select` winners. Fitness is not turned
+    into probabilities; selective pressure is controlled with tau.
     """
     contenders = rng.integers(0, len(F), size=(n_select, tau))
     winners = np.argmin(F[contenders], axis=1)
@@ -23,32 +23,32 @@ def tournament(F: np.ndarray, tau: int, n_select: int, rng: np.random.Generator)
 
 def uniform_event_crossover(p1: np.ndarray, p2: np.ndarray, pc: float,
                             rng: np.random.Generator) -> np.ndarray:
-    """Cruce uniforme por evento (7.4).
+    """Uniform per-event crossover (7.4).
 
-    Para cada evento, una máscara elige qué progenitor aporta su paquete
-    (t, r) COMPLETO, de modo que nunca se combina la franja de un padre
-    con la sala del otro. Con probabilidad 1 - pc el hijo es copia de p1.
+    For each event, a mask chooses which parent contributes its WHOLE
+    (t, r) package, so the time slot of one parent is never combined with
+    the room of the other. With probability 1 - pc the child is a copy of p1.
     """
     M, E, _ = p1.shape
     mask = rng.random((M, E)) < 0.5
-    mask[rng.random(M) >= pc] = True          # sin cruce: hereda todo de p1
+    mask[rng.random(M) >= pc] = True          # no crossover: inherits everything from p1
     return np.where(mask[:, :, None], p1, p2)
 
 
 def reassignment_mutation(pop: np.ndarray, pm: float, n_slots: int, n_rooms: int,
                           rng: np.random.Generator) -> np.ndarray:
-    """Mutación por reasignación (7.5), con probabilidad pm por evento.
+    """Reassignment mutation (7.5), with probability pm per event.
 
-    Elige al azar entre las tres variantes de la ecuación (6):
-    (t, r) -> (t', r'),  (t, r) -> (t', r),  (t, r) -> (t, r').
-    Los campos fijos l, c y S no forman parte del cromosoma.
+    Randomly picks one of the three variants of equation (6): change both
+    t and r, change only t, or change only r.
+    The fixed fields l, c and S are not part of the chromosome.
     """
     out = pop.copy()
     M, E, _ = pop.shape
     mutate = rng.random((M, E)) < pm
     if not mutate.any():
         return out
-    mode = rng.integers(0, 3, size=(M, E))    # 0: ambos, 1: solo t, 2: solo r
+    mode = rng.integers(0, 3, size=(M, E))    # 0: both, 1: only t, 2: only r
     change_t = mutate & (mode != 2)
     change_r = mutate & (mode != 1)
     out[:, :, T_COL] = np.where(change_t, rng.integers(0, n_slots, (M, E)), out[:, :, T_COL])
@@ -57,16 +57,16 @@ def reassignment_mutation(pop: np.ndarray, pm: float, n_slots: int, n_rooms: int
 
 
 def best_k(F: np.ndarray, k: int) -> np.ndarray:
-    """Índices de los k mejores (menor F), en orden. Base del elitismo (7.6)."""
+    """Indices of the k best (lowest F), in order. Basis of elitism (7.6)."""
     return np.argsort(F, kind="stable")[:k]
 
 
 def diversity(pop: np.ndarray, n_rooms: int) -> float:
-    """Diversidad poblacional D_t (Tabla 16).
+    """Population diversity D_t (Table 16).
 
-    D_t = 2 / (N(N-1)) · Σ_{a<b} d(X_a, X_b), con d la fracción de eventos
-    con distinto paquete (t, r). Se calcula en O(N·E) contando, por evento,
-    los pares de individuos que comparten el mismo paquete.
+    D_t = 2 / (N(N-1)) * sum_{a<b} d(X_a, X_b), where d is the fraction of
+    events with a different (t, r) package. Computed in O(N*E) by counting,
+    per event, the pairs of individuals that share the same package.
     """
     N, E, _ = pop.shape
     if N < 2:

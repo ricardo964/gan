@@ -1,8 +1,8 @@
-"""Justificación de un horario: desglose de F(P) por regla.
+"""Justification of a schedule: breakdown of F(P) by rule.
 
-Para cada regla activa reporta V_i(P), w_i, la penalización w_i·V_i y
-los eventos involucrados con su docente, clase, franja y sala, de modo
-que el usuario pueda ver POR QUÉ un horario obtuvo su aptitud.
+For each active rule it reports V_i(P), w_i, the penalty w_i * V_i and
+the events involved with their teacher, class, time slot and room, so
+the user can see WHY a schedule obtained its fitness.
 """
 from __future__ import annotations
 
@@ -34,10 +34,10 @@ def describe_event(evaluator: Evaluator, ind: np.ndarray, e: int) -> dict:
 
 
 def explain(evaluator: Evaluator, ind: np.ndarray, max_events: int = 50) -> dict:
-    """Explicación completa de un horario.
+    """Full explanation of a schedule.
 
-    `cobertura` es la proporción de violaciones que quedan asociadas a una
-    regla y a eventos concretos (métrica de cobertura explicativa, 11.3).
+    `cobertura` is the proportion of violations that are tied to a rule
+    and to specific events (explanation coverage metric, 11.3).
     """
     ev = evaluator.evaluate(ind)
     reglas, total_v, covered_v = [], 0.0, 0.0
@@ -71,7 +71,7 @@ def explain(evaluator: Evaluator, ind: np.ndarray, max_events: int = 50) -> dict
 
 
 def compare(explanations: list[dict]) -> list[dict]:
-    """Tabla regla × horario para comparar los k mejores."""
+    """Rule by schedule table to compare the k best."""
     names = [r["nombre"] for r in explanations[0]["reglas"]] if explanations else []
     rows = []
     for name in names:
