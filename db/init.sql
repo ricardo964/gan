@@ -88,7 +88,8 @@ CREATE TABLE reglas (
 CREATE TABLE corridas (
   id INT AUTO_INCREMENT PRIMARY KEY,
   creada_en TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  estado ENUM('pendiente','ejecutando','terminada','error') NOT NULL DEFAULT 'pendiente',
+  estado ENUM('pendiente','ejecutando','cancelando','cancelada','terminada','error')
+         NOT NULL DEFAULT 'pendiente',
   t_max INT NOT NULL CHECK (t_max > 0),
   k INT NOT NULL CHECK (k > 0),
   n INT NOT NULL CHECK (n > 0),
@@ -96,7 +97,17 @@ CREATE TABLE corridas (
   pc DOUBLE NOT NULL CHECK (pc BETWEEN 0 AND 1),
   pm DOUBLE NOT NULL CHECK (pm BETWEEN 0 AND 1),
   semilla INT,
+  -- Resultados resumidos (se completan al terminar)
+  n_eventos INT,
+  generaciones INT,
+  g_factible INT,                     -- G_f: generaciones hasta H = 0
+  mejor_f DOUBLE,
+  mejor_h DOUBLE,
+  f_inicial DOUBLE,                   -- F0* para ΔF
+  evaluaciones INT,
+  detenida_por VARCHAR(20),           -- t_max | calidad | cancelada
   tiempo_s DOUBLE,
+  mensaje TEXT,                       -- detalle de error
   CHECK (k < n)
 );
 
@@ -106,6 +117,7 @@ CREATE TABLE historial (
   iteracion INT NOT NULL,
   mejor_f DOUBLE NOT NULL,
   mejor_h DOUBLE,
+  media_f DOUBLE,
   diversidad DOUBLE,
   PRIMARY KEY (corrida_id, iteracion),
   FOREIGN KEY (corrida_id) REFERENCES corridas(id) ON DELETE CASCADE
@@ -132,7 +144,9 @@ CREATE TABLE asignaciones (
   salon_id INT NOT NULL,
   PRIMARY KEY (horario_id, evento_id),
   FOREIGN KEY (horario_id) REFERENCES horarios(id) ON DELETE CASCADE,
-  FOREIGN KEY (evento_id) REFERENCES eventos(id),
+  -- Si cambian los grupos/materias, los eventos se regeneran y las
+  -- asignaciones históricas de esos eventos se eliminan con ellos.
+  FOREIGN KEY (evento_id) REFERENCES eventos(id) ON DELETE CASCADE,
   FOREIGN KEY (franja_id) REFERENCES franjas(id),
   FOREIGN KEY (salon_id) REFERENCES salones(id)
 );
@@ -146,7 +160,7 @@ CREATE TABLE violaciones (
   eventos_json JSON,                  -- eventos involucrados
   PRIMARY KEY (horario_id, regla_id),
   FOREIGN KEY (horario_id) REFERENCES horarios(id) ON DELETE CASCADE,
-  FOREIGN KEY (regla_id) REFERENCES reglas(id)
+  FOREIGN KEY (regla_id) REFERENCES reglas(id) ON DELETE CASCADE
 );
 
 -- Datos semilla: 60 franjas (10 por día, lunes a sábado, 7:00 a 17:00; la última empieza a las 16:00)
